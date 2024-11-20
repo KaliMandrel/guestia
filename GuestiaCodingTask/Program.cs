@@ -1,9 +1,10 @@
 ﻿using GuestiaCodingTask.Data;
-using GuestiaCodingTask.Helpers;
 using System;
 using System.Linq;
 using GuestiaCodingTask.Helpers;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
+using GuestiaCodingTask.Services;
 
 namespace GuestiaCodingTask
 {
@@ -12,36 +13,34 @@ namespace GuestiaCodingTask
         static void Main(string[] args)
         {
             DbInitialiser.CreateDb();
-            var context = new GuestiaContext();
+            
+            // Register our services
+            var serviceProvider = new ServiceCollection()
+                .AddSingleton<IGuestService, GuestService>()
+                .AddSingleton<IGuestFormatter, GuestFormatter>()
+                .BuildServiceProvider();
 
-            var results = context.Guests
-                .Include(g => g.GuestGroup)
-                .OrderBy(g => g.LastName)
-                .ToList()
-                .GroupBy(g => g.GuestGroup)
-                .ToList();
+            // retrieve our services
+            var guestService = serviceProvider.GetService<IGuestService>();
+            var consoleWriter = serviceProvider.GetService<IGuestFormatter>();
+            // Get the guests
+            var results = guestService.GetGuests();
 
+            // Print to console
             foreach (var resultSet in results)
             {
+                Console.WriteLine("***********");
                 Console.WriteLine(resultSet.Key.Name);
-                foreach (var guest in resultSet)     
+                Console.WriteLine("***********");
+                foreach (var guest in resultSet)
                 {
-                    Console.WriteLine(PrintGuest(guest));
+                    // Use appropriate formatting
+                    Console.WriteLine(consoleWriter.PrintGuest(guest));   
                 }
             }
         }
 
-        static string PrintGuest(Guest guest)
-        {
-            return guest.GuestGroup.NameDisplayFormat switch
-            {
-                NameDisplayFormatType.LastNameCommaFirstNameInitial =>
-                    $"{guest.LastName}, {guest.FirstName.Substring(0, 1)}",
-                NameDisplayFormatType.UpperCaseLastNameSpaceFirstName =>
-                    $"{guest.LastName.ToUpper()} {guest.FirstName}",
-                _ => "N/A"
-            };
-        }
+        
     }
     
 }
