@@ -9,7 +9,7 @@ namespace GuestiaCodingTask.Data
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
-            optionsBuilder.UseSqlServer(@"Server=.\SQLEXPRESS;Database=GuestiaDB;Trusted_Connection=True;");
+            optionsBuilder.UseSqlServer(@"Server=(localdb)\mssqllocaldb;Database=GuestiaDB;Trusted_Connection=True;");
         }
     }
 }
